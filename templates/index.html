@@ -21,9 +21,15 @@
             </div>
         </form>
 
-        {% if response %}
+        {% if shortened_url %}
         <hr>
-        <span class="text-success">Here is your shortened URL: {{response}}</span>
+        <span class="text-success">Here is your shortened URL: {{shortened_url}}</span>
+        <br>
+        <span class="text-success">Here a URL for when you want to delete the entry: {{deletion_url}}</span>
+        {% endif %}
+
+        {% if deletion_success %}
+        <span class="text-success">Your URL has been deleted!</span>
         {% endif %}
 
         {% if err_response %}
