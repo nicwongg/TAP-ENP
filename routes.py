@@ -16,8 +16,9 @@ def shorten_url():
     url = data['url'].strip()
     custom_alias = data['custom_alias'].strip()
 
-    if url[:4] != 'http':
+    if url[:7] != 'http://' and url[:8] != 'https://':
         url = 'http://' + url
+
 
     if not valid_url(url):
         return render_template("index.html", err_response='Invalid URL provided!')
@@ -36,9 +37,11 @@ def shorten_url():
         num = get_counter()
         shortened = shorten(num, url)
 
-    add_new_shortened_url(shortened, url)
+    deletion_url = create_delete_url(shortened)
 
-    return render_template("index.html", response=request.host_url + shortened)
+    add_new_shortened_url(shortened, url, deletion_url)
+
+    return render_template("index.html", shortened_url=request.host_url + shortened, deletion_url=request.host_url + "delete_url/" + deletion_url)
 
 
 @app.route('/shorten_url', methods=['GET'])
@@ -54,3 +57,12 @@ def redirect_to_original(shorten_id):
     url = get_original_url(shorten_id)[0]
 
     return redirect(url, code=302)
+
+@app.route('/delete_url/<deletion_url>', methods=['GET'])
+def delete_url(deletion_url):
+    if not check_deletion_url_exist(deletion_url):
+        return render_template("index.html", err_response='Unable to find the URL to delete!')
+    print(deletion_url)
+    delete_url_from_db(deletion_url)
+
+    return render_template("index.html", deletion_success="URL successfully deleted")
