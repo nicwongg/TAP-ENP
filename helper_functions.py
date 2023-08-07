@@ -2,6 +2,7 @@ import sqlite3
 import re
 import string
 from urllib.parse import unquote
+import hashlib
 
 
 def get_db_connection():
@@ -32,10 +33,10 @@ def shorten(num, url):
     return shortened
 
 
-def add_new_shortened_url(shortened, url):
+def add_new_shortened_url(shortened, url, deletion_url):
     conn = get_db_connection()
     conn.execute(
-        f"""INSERT INTO urls (shorten_id, original_url) VALUES (?, ?);""", (shortened, url))
+        f"""INSERT INTO urls (shorten_id, original_url, deletion_url) VALUES (?, ?, ?);""", (shortened, url, deletion_url))
     conn.commit()
     conn.close()
 
@@ -51,6 +52,18 @@ def check_alias_exist(custom_alias):
     conn.close()
     return len(res) > 0
 
+def check_deletion_url_exist(deletion_url):
+    conn = get_db_connection()
+    res = conn.execute(
+        f"SELECT deletion_url from urls where deletion_url = '{deletion_url}'").fetchone()
+    conn.close()
+    return len(res) > 0
+
+def delete_url_from_db(deletion_url):
+    conn = get_db_connection()
+    conn.execute(f"DELETE FROM urls WHERE deletion_url = (?);", (deletion_url,))
+    conn.commit()
+    conn.close()
 
 def get_original_url(custom_alias):
     conn = get_db_connection()
@@ -58,6 +71,12 @@ def get_original_url(custom_alias):
         f"SELECT original_url from urls where shorten_id = '{custom_alias}'").fetchone()
     conn.close()
     return url
+
+
+def create_delete_url(shortened_url):
+    result = hashlib.md5(shortened_url.encode()).hexdigest()
+    print(result)
+    return result
 
 
 ALPHANUMERICS = string.digits + string.ascii_letters
